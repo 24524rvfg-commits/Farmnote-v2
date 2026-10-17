@@ -928,7 +928,34 @@ window.EditorController = class EditorController {
       }
     });
 
+    // ── Export Dropdown Menu (Clean & Compact) ──────────────────────────────
+    const btnExportDropdown  = document.getElementById('btn-export-dropdown');
+    const menuExportDropdown = document.getElementById('menu-export-dropdown');
+    const exportChevron      = document.getElementById('export-chevron');
+
+    if (btnExportDropdown && menuExportDropdown) {
+      btnExportDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = menuExportDropdown.classList.contains('hidden');
+        menuExportDropdown.classList.toggle('hidden', !isHidden);
+        if (exportChevron) exportChevron.classList.toggle('open', isHidden);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!menuExportDropdown.classList.contains('hidden') && !e.target.closest('#wrap-export-menu')) {
+          menuExportDropdown.classList.add('hidden');
+          if (exportChevron) exportChevron.classList.remove('open');
+        }
+      });
+    }
+
+    const closeExportMenu = () => {
+      if (menuExportDropdown) menuExportDropdown.classList.add('hidden');
+      if (exportChevron) exportChevron.classList.remove('open');
+    };
+
     document.getElementById('btn-export').addEventListener('click', async () => {
+      closeExportMenu();
       try {
         await window.PDFEngine.exportNotebookToPDF(this.currentNotebook, this.pages, this.canvasEngine);
       } catch (err) {
@@ -939,6 +966,7 @@ window.EditorController = class EditorController {
     const btnExportNative = document.getElementById('btn-export-native');
     if (btnExportNative) {
       btnExportNative.addEventListener('click', async () => {
+        closeExportMenu();
         if (!this.currentNotebook) return;
         try {
           await this.flushPendingSaves();
