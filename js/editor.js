@@ -935,6 +935,7 @@ window.EditorController = class EditorController {
 
     if (btnExportDropdown && menuExportDropdown) {
       btnExportDropdown.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const isHidden = menuExportDropdown.classList.contains('hidden');
         menuExportDropdown.classList.toggle('hidden', !isHidden);
