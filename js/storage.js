@@ -524,8 +524,11 @@ window.Storage = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const dateStr = new Date().toISOString().slice(0, 10);
+    const isChunkOrAll = partLabel.startsWith('Part') || partLabel === 'All';
     a.href = url;
-    a.download = `FarmNotes_Backup_${partLabel}_${dateStr}.farmnotes`;
+    a.download = isChunkOrAll
+      ? `FarmNotes_Backup_${partLabel}_${dateStr}.farmnotes`
+      : `${partLabel}.farmnotes`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -536,6 +539,14 @@ window.Storage = {
       pagesCount: pages.length,
       assetsCount: assets.length
     };
+  },
+
+  // Exports a single notebook as native editable .farmnotes file (Full vector strokes, sharp & erasable)
+  async exportSingleNotebook(notebookId) {
+    const nb = await this.getNotebook(notebookId);
+    if (!nb) throw new Error('ไม่พบข้อมูลสมุดโน้ต');
+    const cleanTitle = (nb.title || 'Notebook').replace(/[/\\?%*:|"<>]/g, '_').trim();
+    return await this.exportBatch([nb], cleanTitle);
   },
 
   async downloadBackupFile(onProgress) {

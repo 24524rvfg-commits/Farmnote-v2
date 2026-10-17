@@ -917,18 +917,19 @@ window.LibraryController = class LibraryController {
     const groupItem    = document.getElementById('ctx-group');
     const renameItem   = document.getElementById('ctx-rename');
     const dupItem      = document.getElementById('ctx-duplicate');
+    const exportItem   = document.getElementById('ctx-export-farmnotes');
     const deleteItem   = document.getElementById('ctx-delete');
     const restoreItem  = document.getElementById('ctx-restore');
     const permDelItem  = document.getElementById('ctx-delete-permanent');
 
     if (isTrashView) {
       // In trash: only show restore + permanent delete
-      [favItem, coverItem, groupItem, renameItem, dupItem, deleteItem].forEach(el => { if (el) el.style.display = 'none'; });
+      [favItem, coverItem, groupItem, renameItem, dupItem, exportItem, deleteItem].forEach(el => { if (el) el.style.display = 'none'; });
       if (restoreItem)  restoreItem.style.display  = '';
       if (permDelItem)  permDelItem.style.display   = '';
     } else {
       // Normal view: show all normal items, hide trash-only buttons
-      [favItem, coverItem, groupItem, renameItem, dupItem, deleteItem].forEach(el => { if (el) el.style.display = ''; });
+      [favItem, coverItem, groupItem, renameItem, dupItem, exportItem, deleteItem].forEach(el => { if (el) el.style.display = ''; });
       if (restoreItem)  restoreItem.style.display  = 'none';
       if (permDelItem)  permDelItem.style.display   = 'none';
     }
@@ -1025,6 +1026,31 @@ window.LibraryController = class LibraryController {
         await this.duplicateNotebook(nb);
       }
     });
+
+    const ctxExportBtn = document.getElementById('ctx-export-farmnotes');
+    if (ctxExportBtn) {
+      ctxExportBtn.addEventListener('click', async () => {
+        const nb = this.activeContextMenuNotebook;
+        this.hideNotebookContextPopover();
+        if (!nb) return;
+        try {
+          if (window.CustomDialog && window.CustomDialog.toast) {
+            window.CustomDialog.toast(`กำลังส่งออกสมุด "${nb.title}"...`);
+          }
+          await window.Storage.exportSingleNotebook(nb.id);
+          if (window.CustomDialog && window.CustomDialog.toast) {
+            window.CustomDialog.toast(`ส่งออกสมุด "${nb.title}" สำเร็จ!`, 2500);
+          }
+        } catch (err) {
+          console.error('Export native error:', err);
+          if (window.CustomDialog && window.CustomDialog.alert) {
+            window.CustomDialog.alert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออกสมุดได้: ' + err.message);
+          } else {
+            alert('ไม่สามารถส่งออกสมุดได้: ' + err.message);
+          }
+        }
+      });
+    }
 
     document.getElementById('ctx-delete').addEventListener('click', () => {
       const nb = this.activeContextMenuNotebook;

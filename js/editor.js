@@ -936,6 +936,30 @@ window.EditorController = class EditorController {
       }
     });
 
+    const btnExportNative = document.getElementById('btn-export-native');
+    if (btnExportNative) {
+      btnExportNative.addEventListener('click', async () => {
+        if (!this.currentNotebook) return;
+        try {
+          await this.flushPendingSaves();
+          if (window.CustomDialog && window.CustomDialog.toast) {
+            window.CustomDialog.toast(`กำลังส่งออกสมุดแบบเวกเตอร์ (.farmnotes)...`);
+          }
+          await window.Storage.exportSingleNotebook(this.currentNotebook.id);
+          if (window.CustomDialog && window.CustomDialog.toast) {
+            window.CustomDialog.toast(`ส่งออกไฟล์สมุดสำเร็จ! (สามารถนำเข้าและลบ/แก้ไขได้ 100%)`, 3000);
+          }
+        } catch (err) {
+          console.error('Export native error:', err);
+          if (window.CustomDialog && window.CustomDialog.alert) {
+            window.CustomDialog.alert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออกสมุดได้: ' + err.message);
+          } else {
+            alert('ไม่สามารถส่งออกสมุดได้: ' + err.message);
+          }
+        }
+      });
+    }
+
     document.getElementById('btn-save-pdf').addEventListener('click', async () => {
       const btn        = document.getElementById('btn-save-pdf');
       const saveStatus = document.getElementById('save-status');
