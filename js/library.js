@@ -538,37 +538,47 @@ window.LibraryController = class LibraryController {
       });
 
       backupFileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
 
         try {
-          if (window.CustomDialog && window.CustomDialog.toast) {
-            window.CustomDialog.toast('กำลังนำเข้าข้อมูลและรูปภาพ...');
+          let totalNotebooks = 0;
+          let totalPages = 0;
+          let totalAssets = 0;
+
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (window.CustomDialog && window.CustomDialog.toast) {
+              window.CustomDialog.toast(`กำลังนำเข้าไฟล์ที่ ${i + 1}/${files.length} (${file.name})...`);
+            }
+            const text = await file.text();
+            const result = await window.Storage.importAllData(text);
+            totalNotebooks += (result.notebooksCount || 0);
+            totalPages += (result.pagesCount || 0);
+            totalAssets += (result.assetsCount || 0);
           }
-          const text = await file.text();
-          const result = await window.Storage.importAllData(text);
 
           await this.loadLibrary();
 
-          if (result.notebooksCount === 0) {
+          if (totalNotebooks === 0 && totalPages === 0) {
             if (window.CustomDialog && window.CustomDialog.alert) {
               window.CustomDialog.alert(
-                'ไม่พบสมุดโน้ตในไฟล์นี้ (0 เล่ม)',
-                'ไฟล์สำรองข้อมูลที่คุณเลือกไม่มีข้อมูลสมุดโน้ตอยู่เลย\n\nสาเหตุเกิดจากตอนส่งออก คุณเปิดเครื่องมือบนเว็บแทนที่จะเปิดจากในเครื่อง\nกรุณาดูวิธีส่งออกที่ถูกต้องตามที่แนะนำนะครับ'
+                'ไม่พบสมุดโน้ตในไฟล์ที่เลือก',
+                'ไฟล์สำรองข้อมูลที่คุณเลือกไม่มีข้อมูลสมุดโน้ตอยู่เลย กรุณาตรวจสอบไฟล์อีกครั้งครับ'
               );
             } else {
-              alert('ไม่พบสมุดโน้ตในไฟล์นี้ (0 เล่ม)');
+              alert('ไม่พบสมุดโน้ตในไฟล์ที่เลือก');
             }
             return;
           }
 
           if (window.CustomDialog && window.CustomDialog.alert) {
             window.CustomDialog.alert(
-              'กู้คืนข้อมูลสำเร็จ!',
-              `นำเข้าเรียบร้อยแล้ว:\n- สมุดโน้ต: ${result.notebooksCount} เล่ม\n- หน้ากระดาษ: ${result.pagesCount} หน้า\n- ไฟล์แนบ/รูปภาพ/PDF: ${result.assetsCount} รายการ`
+              'กู้คืนข้อมูลสำเร็จทั้งหมด!',
+              `นำเข้าไฟล์สำรองทั้งหมด ${files.length} ไฟล์เรียบร้อยแล้ว:\n- สมุดโน้ตทั้งหมด: ${totalNotebooks} เล่ม\n- หน้ากระดาษ: ${totalPages} หน้า\n- ไฟล์แนบ/รูปภาพ/PDF: ${totalAssets} รายการ`
             );
           } else {
-            alert(`กู้คืนข้อมูลสำเร็จ! นำเข้าสมุดโน้ต ${result.notebooksCount} เล่มเรียบร้อยแล้ว`);
+            alert(`กู้คืนข้อมูลสำเร็จ! นำเข้าสมุดโน้ตทั้งหมด ${totalNotebooks} เล่มเรียบร้อยแล้ว`);
           }
         } catch (err) {
           console.error('Restore error:', err);
